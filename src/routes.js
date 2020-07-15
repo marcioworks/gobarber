@@ -9,6 +9,7 @@ const SessionController = require('./app/controllers/SessionController');
 const FileController = require('./app/controllers/FileController');
 const ProviderController = require('./app/controllers/ProviderController');
 const AppointmentController = require('./app/controllers/AppointmentController');
+const ScheduleController = require('./app/controllers/ScheduleController');
 
 const routes = new Router();
 const upload = multer(multerConfig);
@@ -21,6 +22,8 @@ routes.post('/session', SessionController.store);
 
 routes.get('/appointments', authMiddleware, AppointmentController.index);
 routes.post('/appointments', authMiddleware, AppointmentController.store);
+
+routes.get('/schedule', authMiddleware, ScheduleController.index);
 
 routes.post('/files', upload.single('file'), FileController.store);
 
