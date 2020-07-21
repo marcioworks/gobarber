@@ -1,5 +1,11 @@
 const Yup = require('yup');
-const { startOfHour, parseISO, isBefore, format } = require('date-fns');
+const {
+  startOfHour,
+  parseISO,
+  isBefore,
+  format,
+  subHours,
+} = require('date-fns');
 const pt = require('date-fns/locale/pt');
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
@@ -54,12 +60,12 @@ class AppointmentController {
       where: { id: provider_id, provider: true },
     });
 
-    console.log(isProvider);
     if (req.userId === isProvider.id) {
       return res
         .status(401)
         .json({ error: 'provider cant make appointments with himself' });
     }
+
     if (!isProvider) {
       return res
         .status(401)
@@ -111,6 +117,30 @@ class AppointmentController {
       content: `Novo Agendamento para ${user.name} para ${formatedDate}`,
       user: provider_id,
     });
+
+    return res.json(appointment);
+  }
+
+  async delete(req, res) {
+    const appointment = await Appointment.findByPk(req.params.id);
+
+    if (appointment.user_id !== req.userId) {
+      return res
+        .status(401)
+        .json({ error: 'You dont have permission to cancel this appointment' });
+    }
+
+    const dateWithSub = subHours(appointment.date, 2);
+
+    if (isBefore(dateWithSub, new Date())) {
+      return res
+        .status(401)
+        .json({ error: 'you can only cancel appointmenst 2 hours in advance' });
+    }
+
+    appointment.canceled_at = new Date();
+
+    await appointment.save();
 
     return res.json(appointment);
   }
